@@ -284,17 +284,24 @@ def tsToVal(i):
 
 class GenID:
   """
-  Construct an instance of this object to generate a sequence of ID
-  codes based on the current time until you find a unique one.
+  Construct an instance of this class to generate a sequence of ID codes
+  based on the current time until you find a unique one.
+  
+  The constructed instance is a single-use iterator that can be used in
+  a for statement to iterate through exactly 2,048 generated ID codes.
+  The idea is that you keep iterating until you find an ID code that is
+  unique within your dataset.
   """
   
   def __init__(self, force_fallback=False):
     """
     Construct a new ID generator object.
    
-    You should construct a new generator object instance for each new ID
-    that you want to find.
-   
+    You should normally construct a new generator object instance for
+    each new ID that you want to find.  (There may be certain special
+    cases where it makes sense to reuse the same object for multiple
+    IDs, but this should not generally be done.)
+    
     A generator object is used instead of just a function because you
     may need to make multiple attempts to find an ID that is unique.
     The generator generates IDs in a special fashion to reduce the
@@ -333,27 +340,42 @@ class GenID:
     # Set up the instance either in regular mode or fallback mode
     if ts is not None:
       # Set up instance for regular mode
-      self.fallback = False
-      self.gencount = 0
-      self.psel = rgen_prime()
-      self.nextval = rgen_range(0, 2047)
-      self.basebits = tsToVal(ts)
+      self.__fallback = False
+      self.__gencount = 0
+      self.__psel = rgen_prime()
+      self.__nextval = rgen_range(0, 2047)
+      self.__basebits = tsToVal(ts)
       
     else:
       # Set up instance for fallback mode
-      self.fallback = True
-      self.gencount = 0
-      self.harray = rgen_sample()
+      self.__fallback = True
+      self.__gencount = 0
+      self.__harray = rgen_sample()
 
-  def nextID(self):
+  def __iter__(self):
     """
-    Generate the next Jacques-ID with this generator object.
+    This is a single-use iterator, so the iter operator just returns
+    itself as the iterator object.
+    
+    It is intended that you use the object instance in a for iteration
+    statement, so that this method will be used automatically.
+    """
+    return self
+
+  def __next__(self):
+    """
+    Generate the next Jacques-ID with this generator object, or raise
+    StopIteration if there are no more IDs to generate with this object
+    instance.
    
     Each call to this function generates a new ID that has never been
-    generated before by this object instance.
+    generated before by this object instance.  It is intended that you
+    use the object instance in a for iteration statement, so that this
+    method will be used automatically.
    
     This can be called up to 2,048 times for each object instance.
-    After that, further calls to the function always return None.
+    After that, further calls to the function always raise the
+    StopIteration exception.
    
     The current time is read during generator object construction and
     NOT during this call, so waiting before calling this function again
@@ -370,32 +392,31 @@ class GenID:
    
     Return:
    
-      a newly generated Jacques-ID code string, or None if this
-      generator object is not able to generate any further codes
+      a newly generated Jacques-ID code string
     """
     
-    # If we have exhausted all IDs we can generate, return None
-    if self.gencount >= 2048:
-      return None
+    # If we have exhausted all IDs we can generate, so stop iteration
+    if self.__gencount >= 2048:
+      raise StopIteration()
     
     # Determine which generation algorithm to use and use it to generate
     # the numeric value of the ID
     result = None
-    if self.fallback:
+    if self.__fallback:
       # Fallback generation mode, so generate 23 random bits
       rb = rgen_range(0, 0x7fffff)
       
       # Combine with the randomly chosen hour count to get the numeric
       # value of the ID
-      result = (rb << 25) + self.harray[self.gencount]
+      result = (rb << 25) + self.__harray[self.__gencount]
       
     else:
       # Regular generation mode, so combine nextval with basebits to get
       # the numeric value of the ID
-      result = (self.nextval << 37) + self.basebits
+      result = (self.__nextval << 37) + self.__basebits
       
       # Update nextval
-      self.nextval = (self.nextval + self.psel) % 2048
+      self.__nextval = (self.__nextval + self.__psel) % 2048
     
     # We got the numeric value of the 48-bit ID, so convert it to six
     # bytes in big endian order
@@ -408,7 +429,7 @@ class GenID:
     result = result.decode(encoding='utf-8')
     
     # Increment count of generated IDs
-    self.gencount = self.gencount + 1
+    self.__gencount = self.__gencount + 1
     
     # Return result
     return result
