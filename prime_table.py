@@ -2,26 +2,32 @@
 # prime_table.py
 # ==============
 #
-# Parse a data file of primes using the parse_primes module and then
-# generate either an HTML table listing of primes that are greater than
-# 2 and less than 2048, or a Python array literal of the same.
-#
-# Syntax:
-#
-#   python3 prime_table.py html [data]
-#   python3 prime_table.py py [data]
-#
-# [data] is the file path to the prime data file that will be parsed
-# with the parse_primes module.
-#
-# The html invocation generates the HTML table while the py invocation
-# generates the Python literal.
-#
+
+"""
+Parse a data file of primes using the parse_primes module and then
+generate either an HTML table listing of primes that are greater than 2
+and less than 2048, or a Python array literal of the same.
+
+Syntax:
+
+  python3 prime_table.py html [data]
+  python3 prime_table.py py [data]
+
+[data] is the file path to the prime data file that will be parsed with
+the parse_primes module.
+
+The html invocation generates the HTML table while the py invocation
+generates the Python literal.
+"""
 
 import parse_primes
 
 import io
 import sys
+
+# Don't export anything
+#
+__all__ = []
 
 #
 # Program entrypoint
