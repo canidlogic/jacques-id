@@ -2,16 +2,23 @@
 # check_cycles.py
 # ===============
 #
-# Verify through brute-force checking that all prime numbers that are
-# greater than two and less than 2048 can be used to iterate through all
-# integer values modulo 2048 without any repetition.
-#
-# Syntax:
-#
-#   python3 check_cycles.py
-#
+
+"""
+Verify through brute-force checking that all prime numbers that are
+greater than two and less than 2048 can be used to iterate through all
+integer values modulo 2048 without any repetition.
+
+Syntax:
+
+  python3 check_cycles.py
+
+"""
 
 import sys
+
+# Don't export anything
+#
+__all__ = []
 
 #
 # Prime number table
